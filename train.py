@@ -10,7 +10,6 @@ from utils import AverageMeter
 
 
 class Trainer:
-    """ Trainer for MNIST classification """
 
     def __init__(self, model: nn.Module, device: str = 'cpu'):
         self.model = model.to(device)
@@ -50,7 +49,6 @@ class Trainer:
         print("Training completed.")
 
     def eval(self, test_loader: DataLoader) -> tuple[float, float]:
-        """ Model evaluation, return the model accuracy and value of loss function over test set """
         self.model.eval()
         accuracy_counter = AverageMeter()
         loss_tracker = AverageMeter()
@@ -75,7 +73,6 @@ class Trainer:
         torch.save(self.model.state_dict(), os.path.join(path, "mnist.pth"))
 
     def infer(self, sample: torch.Tensor) -> int:
-        """ Model inference: input an image, return its class index """
         if not self.trained:
             warn(f'Trying to infer with an untrained model.')
         sample = sample.to(self.device)
@@ -84,6 +81,5 @@ class Trainer:
             return torch.argmax(self.model(sample)).item()
 
     def load_model(self, path: str) -> None:
-        """ load model from a .pth file """
         self.model.load_state_dict(torch.load(os.path.join(path, 'mnist.pth'), map_location=self.device))
         self.trained = True
