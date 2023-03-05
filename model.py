@@ -52,8 +52,7 @@ class AngleLinear(nn.Module):
 
         cos_theta = cos_theta * xlen.view(-1,1)
         phi_theta = phi_theta * xlen.view(-1,1)
-        output = (cos_theta,phi_theta)
-        return output # size=(B,Classnum,2)
+        return cos_theta, phi_theta # size=(B,Classnum,2)
 
 
 class Net(nn.Module):
@@ -67,7 +66,7 @@ class Net(nn.Module):
         self.conv3 = nn.Conv2d(128, 256, 3, stride=2)
         self.conv4 = nn.Conv2d(256, 512, 3, stride=2)
 
-        self.fc1 = nn.Linear(512, 512)
+        self.fc1 = nn.Linear(100352, 512)
         self.fc2 = AngleLinear(512, self.num_class)
 
     def forward(self, x):

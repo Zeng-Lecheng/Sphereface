@@ -52,12 +52,12 @@ class LFWDataset(Dataset):
             # path_name is literally name of the persons
             if path_name in name_list:
                 for single_image in os.listdir(os.path.join(path, path_name)):
-                    img = Image.open(os.path.join(path, path_name, single_image))
+                    with open(os.path.join(path, path_name, single_image), 'rb') as f:
+                        img = Image.open(f)
+                        img.load()  # Address too many open files error
                     img_aug = img.transpose(Image.FLIP_LEFT_RIGHT)
                     self.images.append(img)
                     self.images.append(img_aug)
-                    img.close() # Address too many open files error
-                    img_aug.close()
                     self.labels.append(path_name)
                     self.labels.append(path_name)
                     labels_set.add(path_name)
@@ -69,8 +69,11 @@ class LFWDataset(Dataset):
 
     def __getitem__(self, index):
         image_tensor = self.to_tensor(self.images[index])
-        label_tensor = torch.zeros(self.num_labels)
-        name = self.labels[index]
 
-        label_tensor[self.labels_encoding[name]] = 1
+        name = self.labels[index]
+        label_tensor = torch.tensor([self.labels_encoding[name]], dtype=torch.int64)
+
         return image_tensor.to(self.device), label_tensor.to(self.device)
+
+    def __len__(self):
+        return len(self.images)

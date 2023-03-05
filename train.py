@@ -6,44 +6,50 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
+from model import AngleLoss
 from utils import AverageMeter
 
 
 class Trainer:
 
-    def __init__(self, model: nn.Module, device: str = 'cpu'):
+    def __init__(
+            self, model: nn.Module,
+            train_loader: DataLoader,
+            test_loader: DataLoader,
+            device: str = 'cpu'
+    ):
         self.model = model.to(device)
         self.device = device
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+
         self.trained = False
 
     def train(
             self,
-            train_loader: DataLoader,
-            test_loader: DataLoader,
             epochs: int,
             lr: float,
     ) -> None:
 
         optimizer = optim.Adam(params=self.model.parameters(), lr=lr)
         loss_track = AverageMeter()
-        ce = nn.CrossEntropyLoss().to(self.device)
+        cri = AngleLoss().to(self.device)
 
         for epoch in range(epochs):
             loss_track.reset()
             self.model.train()
-            for data, target in train_loader:
+            for data, target in self.train_loader:
                 data, target = data.to(self.device), target.to(self.device)
                 optimizer.zero_grad()
                 output = self.model(data)
 
-                loss = ce(output, target)
+                loss = cri(output, target)
                 loss.backward()
                 optimizer.step()
 
                 loss_track.update(loss.item(), n=len(data))
 
-            test_acc, test_loss = self.eval(test_loader)
-            print(f'Epoch: {epoch}, Test accuracy: {test_acc}, Train loss: {loss_track.avg}, Test loss: {test_loss}')
+            print(f'Epoch: {epoch}, Train loss: {loss_track.avg}')
 
         self.trained = True
         print("Training completed.")
@@ -52,7 +58,7 @@ class Trainer:
         self.model.eval()
         accuracy_counter = AverageMeter()
         loss_tracker = AverageMeter()
-        ce = nn.CrossEntropyLoss().to(self.device)
+        cri = AngleLoss().to(self.device)
         with torch.no_grad():
             for x, y_true in test_loader:
                 x, y_true = x.to(self.device), y_true.to(self.device)
@@ -62,7 +68,7 @@ class Trainer:
                     torch.sum(torch.argmax(y_pred, dim=1) == torch.argmax(y_true, dim=1)).item() / len(x),
                     len(x)
                 )
-                loss_tracker.update(ce(y_pred, y_true).item(), len(x))
+                loss_tracker.update(cri(y_pred, y_true).item(), len(x))
         return accuracy_counter.avg, loss_tracker.avg
 
     def save_model(self, path: str):
