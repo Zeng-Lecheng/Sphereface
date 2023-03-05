@@ -56,10 +56,9 @@ class AngleLinear(nn.Module):
 
 
 class Net(nn.Module):
-    def __init__(self, num_class: int, get_feature: bool = False):
+    def __init__(self, num_class: int):
         super().__init__()
         self.num_class = num_class
-        self.get_feature = get_feature
 
         self.conv1 = nn.Conv2d(3, 64, 3, stride=2)
         self.conv2 = nn.Conv2d(64, 128, 3, stride=2)
@@ -69,7 +68,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(100352, 512)
         self.fc2 = AngleLinear(512, self.num_class)
 
-    def forward(self, x):
+    def forward(self, x, get_feature=False):
         x = torch.relu(self.conv1(x))
         x = torch.relu(self.conv2(x))
         x = torch.relu(self.conv3(x))
@@ -78,7 +77,7 @@ class Net(nn.Module):
         x = torch.flatten(x, start_dim=1)
         x = self.fc1(x)
 
-        if self.get_feature:
+        if get_feature:
             return x
         else:
             return self.fc2(x)

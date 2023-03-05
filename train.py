@@ -1,4 +1,5 @@
 import os
+import time
 from warnings import warn
 
 import torch
@@ -54,29 +55,33 @@ class Trainer:
         self.trained = True
         print("Training completed.")
 
-    def eval(self, test_loader: DataLoader) -> tuple[float, float]:
+    def eval(self, test_loader: DataLoader) -> list[tuple]:
+        print('Evaluating...')
         self.model.eval()
         accuracy_counter = AverageMeter()
-        loss_tracker = AverageMeter()
-        cri = AngleLoss().to(self.device)
+        accuracies: list[tuple[float, float]] = []  # list of (thres, accuracy)
         with torch.no_grad():
-            for x, y_true in test_loader:
-                x, y_true = x.to(self.device), y_true.to(self.device)
-                y_pred = self.model(x)
-                # noinspection PyTypeChecker
-                accuracy_counter.update(
-                    torch.sum(torch.argmax(y_pred, dim=1) == torch.argmax(y_true, dim=1)).item() / len(x),
-                    len(x)
-                )
-                loss_tracker.update(cri(y_pred, y_true).item(), len(x))
-        return accuracy_counter.avg, loss_tracker.avg
+            for threshold in torch.linspace(-1., 1., 20):
+                print(f'Evaluating threshold {threshold}')
+                for x1, x2, y in test_loader:
+                    x1, x2 = x1.to(self.device), x2.to(self.device)
+                    x1_feat = self.model(x1, get_feature=True)
+                    x2_feat = self.model(x2, get_feature=True)
+                    # noinspection PyTypeChecker
+                    cos_sim = torch.cosine_similarity(x1_feat, x2_feat)
+                    accuracy_counter.update(
+                        torch.sum(torch.logical_not(torch.logical_xor(cos_sim > threshold, y))).item() / len(x1),
+                        len(x1)
+                    )
+                accuracies.append((threshold.item(), accuracy_counter.avg))
+        return accuracies
 
     def save_model(self, path: str):
         if not self.trained:
             warn(f'Trying to save an untrained model to {path}')
         if not os.path.exists(path):
             os.makedirs(path)
-        torch.save(self.model.state_dict(), os.path.join(path, "mnist.pth"))
+        torch.save(self.model.state_dict(), os.path.join(path, time.strftime('%Y%m%d_%H%M%S.pt')))
 
     def infer(self, sample: torch.Tensor) -> int:
         if not self.trained:
@@ -87,5 +92,5 @@ class Trainer:
             return torch.argmax(self.model(sample)).item()
 
     def load_model(self, path: str) -> None:
-        self.model.load_state_dict(torch.load(os.path.join(path, 'mnist.pth'), map_location=self.device))
+        self.model.load_state_dict(torch.load(os.path.join(path), map_location=self.device))
         self.trained = True
