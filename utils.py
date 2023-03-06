@@ -2,7 +2,7 @@ import os
 
 import torch
 from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor
+from torchvision.transforms import ToTensor, Normalize
 from PIL import Image
 
 
@@ -31,6 +31,7 @@ class LFWDataset(Dataset):
         super().__init__()
         self.device = device
         self.to_tensor = ToTensor()
+        self.normalize = Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         self.images: list[Image] = []
         self.labels: list[str] = []
 
@@ -53,7 +54,7 @@ class LFWDataset(Dataset):
         self.num_labels: int = len(name_set)
 
     def __getitem__(self, index):
-        image_tensor = self.to_tensor(self.images[index])
+        image_tensor = self.normalize(self.to_tensor(self.images[index]))
 
         name = self.labels[index]
         label_tensor = torch.tensor([self.labels_encoding[name]], dtype=torch.int64)
@@ -81,6 +82,7 @@ class LFWPairDataset(Dataset):
         super().__init__()
         self.device = device
         self.to_tensor = ToTensor()
+        self.normalize = Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         self.images: list[tuple[Image, Image, bool]] = []
 
         name_list = self.get_names(name_path)
@@ -112,8 +114,8 @@ class LFWPairDataset(Dataset):
 
 
     def __getitem__(self, index) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        image1_tensor = self.to_tensor(self.images[index][0])
-        image2_tensor = self.to_tensor(self.images[index][1])
+        image1_tensor = self.normalize(self.to_tensor(self.images[index][0]))
+        image2_tensor = self.normalize(self.to_tensor(self.images[index][1]))
         label_tensor = torch.tensor(self.images[index][2])
         return image1_tensor.to(self.device), image2_tensor.to(self.device), label_tensor.to(self.device)
 
