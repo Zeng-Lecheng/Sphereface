@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     net = Net(num_class=train_set.num_labels)
     trainer = Trainer(net, train_loader, test_loader, device=device)
-    trainer.train(epochs=1, lr=.002)
+    trainer.train(epochs=20, lr=.00005)
     trainer.save_model('saved_models/')
-    print(trainer.eval(test_loader))
-    print()
+    threshold, accuracy = trainer.eval(test_loader)
+    print(f'Accuracy: {accuracy} at threshold {threshold}')
