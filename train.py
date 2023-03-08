@@ -14,7 +14,8 @@ from utils import AverageMeter
 class Trainer:
 
     def __init__(
-            self, model: nn.Module,
+            self,
+            model: nn.Module,
             train_loader: DataLoader,
             test_loader: DataLoader,
             device: str = 'cpu'
@@ -73,7 +74,7 @@ class Trainer:
                     x2_feat = self.model(x2, get_feature=True)
                     cos_sim = torch.cosine_similarity(x1_feat, x2_feat)
                     accuracy_counter.update(
-                        # not xor gives a true if predicted similarity is correct
+                        # not+xor gives a true if predicted similarity is correct
                         # summing up boolean tensors gives number of trues in it
                         torch.sum(torch.logical_not(torch.logical_xor(cos_sim > threshold, y))).item() / len(x1),
                         len(x1)
