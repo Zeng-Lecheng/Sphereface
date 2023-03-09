@@ -7,10 +7,10 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser('mnist classification')
-    parser.add_argument('--epochs', type=int, default=20, help="training epochs")
-    parser.add_argument('--lr', type=float, default=2e-5, help="learning rate")
+    parser.add_argument('--epochs', type=int, default=10, help="training epochs")
+    parser.add_argument('--lr', type=float, default=2e-4, help="learning rate")
     parser.add_argument('--bs', type=int, default=20, help="batch size")
-    parser.add_argument('--d', type=str, default='cpu', help='running device, cpu or cuda')
+    parser.add_argument('--d', type=str, default='cuda', help='running device, cpu or cuda')
     args = parser.parse_args()
 
     return args
@@ -34,4 +34,4 @@ if __name__ == '__main__':
     trainer.train(epochs=epochs, lr=learning_rate)
     trainer.save_model('saved_models/')
     threshold, accuracy = trainer.eval(test_loader)
-    print(f'Accuracy: {accuracy} at threshold {threshold}')
+    print(f'Accuracy: {accuracy}')
