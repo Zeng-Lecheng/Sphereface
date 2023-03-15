@@ -1,4 +1,4 @@
-# An SphereFace implementation in PyTorch
+# An implementation of SphereFace in PyTorch
 
 This is an implementation of [SphereFace](https://github.com/wy1iu/sphereface) with the most recent (2023) version of PyTorch. It implements the 4-layer CNN mentioned in "Table 2" in [the paper](https://openaccess.thecvf.com/content_cvpr_2017/papers/Liu_SphereFace_Deep_Hypersphere_CVPR_2017_paper.pdf). It refers a lot to [this repo](https://github.com/clcarwin/sphereface_pytorch) while it's documented a bit and deprecated code removed.
 
